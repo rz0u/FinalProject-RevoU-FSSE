@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  shopName           String    @unique
+  email              String    @unique
+  password           String
+  phoneNumber        String?
+  address            String
+  zipcode            String
+  role               RoleType  @default(seller)
+  createdAt          DateTime  @default(now())
+  resetPasswordToken String?
+  orders             Order[]
+  products           Product[]
+  events             Event[]
+  avatar             String
+  isActivated        Boolean   @default(false)
+  activationToken    String
+}
+
+enum RoleType {
+  seller
+  admin
+}
+
+model Product {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String
+  img           String
+  price         Int
+  datePosted    DateTime  @default(now())
+  gallery       Gallery[]
+  orders        Order[]
+  isPublish     Boolean   @default(false)
+  promotionDate DateTime?
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+}
+
+model Gallery {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  img       String
+}
+
+model Order {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  productId       Int
+  product         Product  @relation(fields: [productId], references: [id])
+  eventId         Int
+  event           Event    @relation(fields: [eventId], references: [id])
+  transactionDate DateTime
+  amount          Int
+  paymentStatus   String   @default("")
+  token           String   @default("")
+  snapUrl         String   @default("")
+  billCode        String
+}
+
+model Event {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String
+  startDate     DateTime
+  finishDate    DateTime
+  status        Status   @default(Running)
+  price         Int
+  img           String
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
+  order         Order[]
+  promotionDate DateTime
+}
+
+enum Status {
+  Running
+  Closed
+}
